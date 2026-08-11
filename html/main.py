@@ -41,7 +41,7 @@ class MovieBackendHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 conn = get_pg_connection()
                 cursor = conn.cursor(cursor_factory=RealDictCursor) #Python dictionarry
-                cursor.execute("SELECT id, clean_title, year FROM movies ORDER BY clean_title ASC;") #SQL Lekérdezés
+                cursor.execute("SELECT id, clean_title, year, poster_path, overview, rating::FLOAT FROM movies ORDER BY clean_title ASC;") #SQL Lekérdezés
                 movies = cursor.fetchall() #Lekérdezés adatai
                 cursor.close()
                 conn.close()
@@ -72,7 +72,6 @@ class MovieBackendHandler(http.server.SimpleHTTPRequestHandler):
 
         return super().do_GET()
 
-
 # Indítás
 
 if __name__ == "__main__":
@@ -82,5 +81,6 @@ if __name__ == "__main__":
     server = http.server.HTTPServer(("0.0.0.0", PORT), MovieBackendHandler) #Létrehozzuk a szervert
     try:
         server.serve_forever() #Ez szolgálja ki a kéréseket egy végtelen ciklusban
+
     except KeyboardInterrupt:
         print("\n🛑 Szerver leállítva.")

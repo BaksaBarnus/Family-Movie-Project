@@ -3,6 +3,9 @@ import re
 import shutil
 import sqlite3
 import psycopg2
+import urllib.request
+import urllib.parse
+import json
 
 #Elérési utak
 SMB_DB_PATH = 'Z:/.minidlna/files.db'
@@ -38,7 +41,10 @@ def init_postgres_db():
             clean_title VARCHAR(255) NOT NULL,
             year INTEGER,
             raw_filename TEXT,
-            path TEXT
+            path TEXT,
+            poster_path TEXT,
+            overview TEXT,
+            rating NUMERIC(3, 1)
         );
     ''')
     
@@ -165,17 +171,24 @@ def sync_smb_to_postgres():
         raw_filename = os.path.basename(path) if path else db_title
         clean_title, year = parse_filename(raw_filename)
 
+        tmdb_info = get_tmdb_data(clean_title, year)
+
         # Postgres UPSERT szintaxis: ON CONFLICT ... DO UPDATE
         # PostgreSQL-ben ? helyett %s az átadott elemek jele!
         pg_cursor.execute("""
-            INSERT INTO movies (minidlna_id, clean_title, year, raw_filename, path)
-            VALUES (%s, %s, %s, %s, %s)
-            ON CONFLICT (minidlna_id) DO UPDATE SET
-                clean_title = EXCLUDED.clean_title,
-                year = EXCLUDED.year,
-                raw_filename = EXCLUDED.raw_filename,
-                path = EXCLUDED.path;
-        """, (mini_id, clean_title, year, raw_filename, path))
+            INSERT INTO movies (minidlna_id, clean_title, year, raw_filename, path, poster_path, overview, rating)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (minidlna_id) DO NOTHING;
+        """, (
+            mini_id, 
+            clean_title, 
+            year, 
+            raw_filename, 
+            path, 
+            tmdb_info["poster_path"], 
+            tmdb_info["overview"], 
+            tmdb_info["rating"]
+        ))
         count += 1
 
     pg_conn.commit()
@@ -184,6 +197,40 @@ def sync_smb_to_postgres():
 
     return count
 
+TMDB_API_KEY = 'f0beab514c84abe6ad6f24cca236a0cb'
+
+# Alapértelmezetten az év üres, ha nincsen
+def get_tmdb_data(title, year=None):
+    """Lekéri a film adatait a TMDB API-ból standard urllib segítségével."""
+    base_url = "https://api.themoviedb.org/3/search/movie"
+    
+    params = {
+        "api_key": TMDB_API_KEY,
+        "query": title,
+        "language": "hu-HU"  # Magyar leírásokért!
+    }
+    if year:
+        params["primary_release_year"] = year
+
+    # URL összeállítása a paraméterekkel
+    url = f"{base_url}?{urllib.parse.urlencode(params)}"
+
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode('utf-8'))
+            
+            if data.get("results") and len(data["results"]) > 0:
+                first_match = data["results"][0]
+                return {
+                    "poster_path": first_match.get("poster_path"),
+                    "overview": first_match.get("overview"),
+                    "rating": first_match.get("vote_average")
+                }
+    except Exception as e:
+        print(f"⚠️ TMDB hiba ({title}): {e}")
+
+    return {"poster_path": None, "overview": None, "rating": None}
 
 #MAIN
 if __name__ == '__main__':

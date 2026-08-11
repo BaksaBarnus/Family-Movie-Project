@@ -3,6 +3,8 @@ async function db_fetch() {
         const response = await fetch('api/movies');
         const movies = await response.json();
 
+        console.log(movies)
+
         const tbody = document.getElementById('movie_row');
         tbody.innerHTML = '';
 

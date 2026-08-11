@@ -1,0 +1,8 @@
+*.db
+temp_files.db
+app.db
+
+.vscode/
+
+__pycache__/
+*.py[cod]

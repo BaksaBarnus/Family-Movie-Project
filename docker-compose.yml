@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  #PostgreSQL 
+  postgres_db:
+    image: postgres:16-alpine
+    container_name: family_movie_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: family_movies
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  #Adminer
+  adminer:
+    image: adminer
+    container_name: family_movie_adminer
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:

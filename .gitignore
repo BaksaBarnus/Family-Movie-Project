@@ -1,6 +1,7 @@
 *.db
 temp_files.db
 app.db
+config.py
 
 .vscode/
 

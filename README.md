@@ -83,10 +83,9 @@ A médiaszerver (miniDLNA) saját adatbázisához SQLite3-at használ. Ebből tr
     •   Egy docker konténerbe csomagolva az egész "plug & play", csak magát a médiaszerver saját adatbázis útvonalát kell átírni.
 
 ## API Végpontok
-
-    | Metódus       | Végpont               | Leírás                           |
-    | ------------- |:---------------------:| --------------------------------:|
-    | GET           |  /api/movies          | Filmek listázása                 |
-    | GET           |  /api/wishlist        |   Jelenlegi kívánságok lekérésa  |
-    | POST          |  /api/wishlist        |    Új kívánság hozzáadása        |
-    | DELETE        |  /api/wishlist?={id}  | Kívánság törlése                 |
+| Metódus       | Végpont               | Leírás                           |
+| ------------- |:---------------------:| --------------------------------:|
+| GET           |  /api/movies          | Filmek listázása                 |
+| GET           |  /api/wishlist        |   Jelenlegi kívánságok lekérésa  |
+| POST          |  /api/wishlist        |    Új kívánság hozzáadása        |
+| DELETE        |  /api/wishlist?={id}  | Kívánság törlése                 |

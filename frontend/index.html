@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Családi Mozitár</title>
+
+    <!-- Modern stílusos betűtípus (Outfit) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- Mozis elmosott háttér effektek -->
+    <div id="bg-backdrop" class="bg-backdrop"></div>
+    <div class="bg-overlay"></div>
+
+    <div class="app-container">
+
+        <!-- Felső Kereső és Statisztika Sáv -->
+        <header class="top-bar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-input" placeholder="Keresés cím alapján... (vagy nyomj nyílgombokat)"
+                    autocomplete="off">
+                <button id="clear-search" class="clear-btn" hidden>&times;</button>
+            </div>
+            <div class="stats-badge">
+                <span id="movie-count">0</span> elem a tárban
+            </div>
+        </header>
+
+        <!-- Fő Kiemelt Kártya (Spotlight View) -->
+        <main class="spotlight-card">
+
+            <!-- BAL OSZLOP: Poszter + Léptető nyílak -->
+            <section class="poster-section">
+                <div class="poster-wrapper">
+                    <img id="poster-img" src="" alt="Film poszter" class="poster-img hidden">
+                    <div id="poster-placeholder" class="poster-placeholder">
+                        <span>🎬</span>
+                    </div>
+                </div>
+
+                <div class="nav-controls">
+                    <button id="prev-btn" class="nav-btn" title="Előző (Bal nyíl)"><span class="arrow">◄</span></button>
+                    <span id="counter-indicator" class="counter-indicator">0 / 0</span>
+                    <button id="next-btn" class="nav-btn" title="Következő (Jobb nyíl)"><span
+                            class="arrow">►</span></button>
+                </div>
+            </section>
+
+            <!-- JOBB OSZLOP: Film részletek -->
+            <section class="info-section">
+                <div class="header-info">
+                    <h1 id="movie-title">Film betöltése...</h1>
+                    <div class="meta-tags">
+                        <span id="movie-year" class="tag year-tag">----</span>
+                        <span id="movie-rating" class="tag rating-tag">⭐ --</span>
+                        <span id="movie-genres" class="tag genres-tag">--</span>
+                    </div>
+                </div>
+
+                <div class="overview-box">
+                    <h3>Szinopszis</h3>
+                    <p id="movie-overview">Kérlek várj, amíg a filmtár adatai betöltődnek...</p>
+                </div>
+
+                <div class="footer-info">
+                    <div class="path-badge" title="Fájl elérési útja">
+                        <span class="icon">📁</span>
+                        <span id="movie-path" class="path-text">...</span>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="main.js"></script>
+</body>
+
+</html>

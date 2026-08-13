@@ -24,6 +24,14 @@ PG_USER = "admin"
 MIN_FILE_SIZE = 700 * 1024 * 1024
 VALID_EXTENSIONS = ('.mkv', '.avi', '.mp4', '.mov', '.wmv', '.m4v')
 ROOT_FOLDERS = ['Filmek', 'movies', 'actual', 'kozos', 'sajat', 'sda1', 'media']
+TMDB_GENRES = {
+    28: "Akció", 12: "Kaland", 16: "Animációs", 35: "Vígjáték", 80: "Bűnügyi",
+    99: "Dokumentum", 18: "Dráma", 10751: "Családi", 14: "Fantasztikus",
+    36: "Történelmi", 27: "Horror", 10402: "Zenei", 9648: "Rejtély",
+    10749: "Romantikus", 878: "Sci-Fi", 10770: "TV film", 53: "Thriller",
+    10752: "Háborús", 37: "Western", 10759: "Akció és Kaland",
+    10762: "Gyerekeknek", 10765: "Sci-Fi és Fantasztikus"
+}
 
 
 # PostgreSQL kapcsolat létrehozás
@@ -46,6 +54,9 @@ def init_postgres_db():
             id SERIAL PRIMARY KEY,
             minidlna_id INTEGER UNIQUE,
             clean_title VARCHAR(255) NOT NULL,
+            tmdb_title VARCHAR(255),
+            original_title VARCHAR(255),
+            genres VARCHAR(255),
             year INTEGER,
             raw_filename TEXT,
             path TEXT,
@@ -54,6 +65,10 @@ def init_postgres_db():
             rating NUMERIC(3, 1)
         );
     ''')
+
+    cursor.execute("ALTER TABLE movies ADD COLUMN IF NOT EXISTS tmdb_title VARCHAR(255);")
+    cursor.execute("ALTER TABLE movies ADD COLUMN IF NOT EXISTS original_title VARCHAR(255);")
+    cursor.execute("ALTER TABLE movies ADD COLUMN IF NOT EXISTS genres VARCHAR(255);")
     
     # Wishlist tábla
     cursor.execute('''
@@ -130,11 +145,25 @@ def get_tmdb_data(title, year=None, is_tv_show=False):
                     ):
                         tmdb_year = int(release_date[:4])
 
+                    # 🟢 Hivatalos cím, Eredeti cím és Műfajok kinyerése
+                    title_key = "name" if is_tv_show else "title"
+                    orig_title_key = "original_name" if is_tv_show else "original_title"
+
+                    tmdb_title = first_match.get(title_key)
+                    original_title = first_match.get(orig_title_key)
+
+                    genre_ids = first_match.get("genre_ids", [])
+                    genre_names = [TMDB_GENRES.get(gid) for gid in genre_ids if gid in TMDB_GENRES]
+                    genres_str = ", ".join(genre_names) if genre_names else None
+
                     return {
                         "poster_path": first_match.get("poster_path"),
                         "overview": first_match.get("overview"),
                         "rating": first_match.get("vote_average"),
                         "tmdb_year": tmdb_year,
+                        "tmdb_title": tmdb_title,
+                        "original_title": original_title,
+                        "genres": genres_str
                     }
         except Exception as e:
             print(f"⚠️ TMDB hiba ({title}, lang={lang}): {e}")
@@ -144,6 +173,9 @@ def get_tmdb_data(title, year=None, is_tv_show=False):
         "overview": None,
         "rating": None,
         "tmdb_year": None,
+        "tmdb_title": None, 
+        "original_title": None,
+        "genres": None
     }
 
 
@@ -274,30 +306,33 @@ def sync_smb_to_postgres():
         raw_filename = os.path.basename(path)
 
         # Upsert
-        pg_cursor.execute(
-            """
-            INSERT INTO movies (minidlna_id, clean_title, year, raw_filename, path, poster_path, overview, rating)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        pg_cursor.execute("""
+            INSERT INTO movies (minidlna_id, clean_title, tmdb_title, original_title, genres, year, raw_filename, path, poster_path, overview, rating)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (minidlna_id) DO UPDATE SET
                 clean_title = EXCLUDED.clean_title,
+                tmdb_title = COALESCE(EXCLUDED.tmdb_title, movies.tmdb_title),
+                original_title = COALESCE(EXCLUDED.original_title, movies.original_title),
+                genres = COALESCE(EXCLUDED.genres, movies.genres),
                 year = EXCLUDED.year,
                 raw_filename = EXCLUDED.raw_filename,
                 path = EXCLUDED.path,
                 poster_path = COALESCE(EXCLUDED.poster_path, movies.poster_path),
                 overview = COALESCE(EXCLUDED.overview, movies.overview),
                 rating = COALESCE(EXCLUDED.rating, movies.rating);
-        """,
-            (
-                mini_id,
-                clean_title,
-                year,
-                raw_filename,
-                path,
-                tmdb_info.get("poster_path"),
-                tmdb_info.get("overview"),
-                tmdb_info.get("rating"),
-            ),
-        )
+        """, (
+            mini_id, 
+            clean_title,
+            tmdb_info.get("tmdb_title"),
+            tmdb_info.get("original_title"),
+            tmdb_info.get("genres"),
+            year, 
+            raw_filename, 
+            path, 
+            tmdb_info.get("poster_path"), 
+            tmdb_info.get("overview"), 
+            tmdb_info.get("rating")
+        ))
         count += 1
 
     # Törölt, megszűnt elemek

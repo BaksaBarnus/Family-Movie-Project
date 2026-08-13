@@ -386,7 +386,7 @@ body {
     flex-direction: column;
     justify-content: space-between;
     gap: 15px;
-    min-width: 0; /* 🟢 Kritikus Flexbox javítás */
+    min-width: 0; 
 }
 
 .footer-info {
@@ -394,7 +394,7 @@ body {
     padding-top: 15px;
     border-top: 1px solid var(--border-color);
     width: 100%;
-    min-width: 0; /* 🟢 Megakadályozza a doboz kitolását */
+    min-width: 0; 
 }
 
 .path-badge {
@@ -407,13 +407,13 @@ body {
     padding: 10px 14px;
     border-radius: var(--radius-sm);
     width: 100%;
-    min-width: 0; /* 🟢 Tartja a kártya szélességét */
+    min-width: 0; 
 }
 
 .path-text {
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis; /* 🟢 Három ponttal vágja el a végét */
+    text-overflow: ellipsis; 
     font-family: monospace;
     opacity: 0.8;
     flex: 1;
@@ -432,4 +432,116 @@ body {
     color: #4da6ff;
     border-color: rgba(77, 166, 255, 0.25);
     background: rgba(77, 166, 255, 0.08);
+}
+
+/* ==========================================================================
+   KÍVÁNSÁGLISTA & MODAL STÍLUSOK
+   ========================================================================== */
+.wishlist-toggle-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 14px 20px;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(16px);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.wishlist-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--border-hover);
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: flex; justify-content: center; align-items: center;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.hidden {
+    display: none;
+}
+
+.modal-card {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    width: 90%; max-width: 480px;
+    padding: 25px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    display: flex; flex-direction: column; gap: 20px;
+}
+
+.modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+}
+
+.modal-header h2 {
+    font-size: 1.4rem; font-weight: 700;
+}
+
+.close-modal-btn {
+    background: none; border: none; color: var(--text-secondary);
+    font-size: 1.8rem; cursor: pointer; line-height: 1;
+}
+
+.close-modal-btn:hover { color: var(--text-primary); }
+
+.wishlist-form {
+    display: flex; gap: 10px;
+}
+
+.wishlist-form input {
+    flex: 1; padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: inherit; outline: none;
+}
+
+.wishlist-form input:focus {
+    border-color: var(--border-hover);
+}
+
+.add-btn {
+    background: var(--accent-gold);
+    border: none; color: #000; font-weight: 700;
+    padding: 0 18px; border-radius: var(--radius-md);
+    cursor: pointer; transition: transform 0.2s;
+}
+
+.add-btn:hover { transform: scale(1.03); }
+
+.wishlist-list {
+    list-style: none;
+    max-height: 260px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 10px;
+}
+
+.wishlist-item {
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+    padding: 12px 16px; border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+}
+
+.delete-item-btn {
+    background: none; border: none; color: #ff5555;
+    font-size: 1.1rem; cursor: pointer; padding: 4px 8px;
+    border-radius: 4px; transition: background 0.2s;
+}
+
+.delete-item-btn:hover {
+    background: rgba(255, 85, 85, 0.2);
 }

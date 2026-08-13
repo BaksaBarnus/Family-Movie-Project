@@ -1,14 +1,13 @@
-version: '3.8'
-
 services:
   #PostgreSQL 
-  postgres_db:
+  db:
     image: postgres:16-alpine
     container_name: family_movie_db
+    restart: always
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: secretpassword
-      POSTGRES_DB: family_movies
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASS}
+      POSTGRES_DB: ${PG_DB}
     ports:
       - "5432:5432"
     volumes:
@@ -21,5 +20,24 @@ services:
     ports:
       - "8080:8080"
 
+  web:
+    build: .
+    container_name: family_movies_app
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - smb_media:/mnt/sda1
+
 volumes:
   pgdata:
+  smb_media:
+    driver: local
+    driver_opts:
+      type: "cifs"
+      o: "username=sambauser,password=systemadmin,vers=3.0,ro"
+      device: "//192.168.2.3/Vinyo"

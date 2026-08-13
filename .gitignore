@@ -2,8 +2,7 @@
 temp_files.db
 app.db
 config.py
-
+.env
 .vscode/
-
 __pycache__/
 *.py[cod]

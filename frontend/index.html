@@ -30,6 +30,7 @@
                     autocomplete="off">
                 <button id="clear-search" class="clear-btn" hidden>&times;</button>
             </div>
+            <button id="wishlist-toggle-btn" class="wishlist-toggle-btn">📝 Kívánságlista</button>
             <div class="stats-badge">
                 <span id="movie-count">0</span> elem a tárban
             </div>
@@ -81,6 +82,25 @@
 
         </main>
 
+    </div>
+
+    <!-- 🟢 KÍVÁNSÁGLISTA MODAL -->
+    <div id="wishlist-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>📝 Kívánságlista</h2>
+                <button id="close-wishlist-btn" class="close-modal-btn">&times;</button>
+            </div>
+            
+            <form id="wishlist-form" class="wishlist-form">
+                <input type="text" id="wishlist-input" placeholder="Milyen filmet szeretnél kérni?..." required autocomplete="off">
+                <button type="submit" class="add-btn">Hozzáadás</button>
+            </form>
+
+            <ul id="wishlist-list" class="wishlist-list">
+                <!-- JS tölti fel -->
+            </ul>
+        </div>
     </div>
 
     <script src="main.js"></script>

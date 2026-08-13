@@ -2,23 +2,17 @@ import os
 import re
 import shutil
 import sqlite3
-import psycopg2
 import urllib.request
 import urllib.parse
 import json
 
 # Api és DB érzékeny adatok
-from config import TMDB_API_KEY, PG_PASS
+from config import TMDB_API_KEY, PG_PASS, MINIDLNA_DB_PATH
+from init_db import get_pg_connection, init_postgres_db
 
 # Elérési utak
-SMB_DB_PATH = 'Z:/.minidlna/files.db'
+SMB_DB_PATH = MINIDLNA_DB_PATH
 TEMP_DB_PATH = 'temp_files.db'
-
-# PostgreSQL kapcsolat
-PG_HOST = "localhost"
-PG_PORT = 5432
-PG_DB = "family_movies"
-PG_USER = "admin"
 
 # További paraméterek
 MIN_FILE_SIZE = 700 * 1024 * 1024
@@ -33,57 +27,6 @@ TMDB_GENRES = {
     10762: "Gyerekeknek", 10765: "Sci-Fi és Fantasztikus"
 }
 
-
-# PostgreSQL kapcsolat létrehozás
-def get_pg_connection():
-    return psycopg2.connect(
-        host=PG_HOST,
-        port=PG_PORT,
-        dbname=PG_DB,
-        user=PG_USER,
-        password=PG_PASS
-    )
-
-def init_postgres_db():
-    conn = get_pg_connection()
-    cursor = conn.cursor()
-    
-    # Movies tábla
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS movies (
-            id SERIAL PRIMARY KEY,
-            minidlna_id INTEGER UNIQUE,
-            clean_title VARCHAR(255) NOT NULL,
-            tmdb_title VARCHAR(255),
-            original_title VARCHAR(255),
-            genres VARCHAR(255),
-            year INTEGER,
-            raw_filename TEXT,
-            path TEXT,
-            poster_path TEXT,
-            overview TEXT,
-            rating NUMERIC(3, 1)
-        );
-    ''')
-
-    cursor.execute("ALTER TABLE movies ADD COLUMN IF NOT EXISTS tmdb_title VARCHAR(255);")
-    cursor.execute("ALTER TABLE movies ADD COLUMN IF NOT EXISTS original_title VARCHAR(255);")
-    cursor.execute("ALTER TABLE movies ADD COLUMN IF NOT EXISTS genres VARCHAR(255);")
-    
-    # Wishlist tábla
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS wishlist (
-            id SERIAL PRIMARY KEY,
-            title VARCHAR(255) NOT NULL,
-            priority INTEGER DEFAULT 2,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    ''')
-    
-    conn.commit()
-    cursor.close()
-    conn.close()
-    print("✅ PostgreSQL táblák ellenőrizve/létrehozva!")
 
 # Ékezetek
 def safe_decode(val):
@@ -120,7 +63,7 @@ def get_tmdb_data(title, year=None, is_tv_show=False):
             year_param = (
                 "first_air_date_year" if is_tv_show else "primary_release_year"
             )
-            params[year_param] = year  # 🟢 JAVÍTVA: Dinamikus kulcsérték!
+            params[year_param] = year 
 
         url = f"{base_url}?{urllib.parse.urlencode(params)}"
 
@@ -145,7 +88,7 @@ def get_tmdb_data(title, year=None, is_tv_show=False):
                     ):
                         tmdb_year = int(release_date[:4])
 
-                    # 🟢 Hivatalos cím, Eredeti cím és Műfajok kinyerése
+                    # Hivatalos cím, Eredeti cím és Műfajok kinyerése
                     title_key = "name" if is_tv_show else "title"
                     orig_title_key = "original_name" if is_tv_show else "original_title"
 
@@ -154,6 +97,7 @@ def get_tmdb_data(title, year=None, is_tv_show=False):
 
                     genre_ids = first_match.get("genre_ids", [])
                     genre_names = [TMDB_GENRES.get(gid) for gid in genre_ids if gid in TMDB_GENRES]
+
                     genres_str = ", ".join(genre_names) if genre_names else None
 
                     return {
@@ -179,8 +123,8 @@ def get_tmdb_data(title, year=None, is_tv_show=False):
     }
 
 
+#Elemzi az elérési utat, kitisztítja a címet, kinyeri az évszámot és felismeri a sorozatokat.
 def parse_parent_folder(path):
-    """Elemzi az elérési utat, kitisztítja a címet, kinyeri az évszámot és felismeri a sorozatokat."""
     raw_filename = os.path.basename(path)
     parent_folder = os.path.basename(os.path.dirname(path))
 
@@ -354,8 +298,6 @@ def sync_smb_to_postgres():
 
 # MAIN
 if __name__ == '__main__':
-    print("🚀 PostgreSQL Adatbázis inicializálása...")
-    init_postgres_db()
     
     print(f"🔄 Szinkronizálás indítása az SMB meghajtóról: {SMB_DB_PATH} ...")
     try:

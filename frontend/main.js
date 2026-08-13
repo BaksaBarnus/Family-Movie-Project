@@ -71,9 +71,6 @@ function renderCurrentMovie() {
     }
 
     const movie = filteredMovies[currentIndex];
-
-    // 🟢 Hivatalos magyar cím és zárójelben az eredeti angol cím megjelenítése
-    // 🟢 Hivatalos magyar cím és zárójelben az eredeti angol cím megjelenítése
     const mainTitle = movie.tmdb_title || movie.clean_title || 'Cím nélkül';
 
     if (movie.original_title && movie.original_title.toLowerCase() !== mainTitle.toLowerCase()) {
@@ -85,7 +82,7 @@ function renderCurrentMovie() {
     movieYear.textContent = movie.year ? movie.year : '----';
     movieRating.textContent = movie.rating ? `⭐ ${Number(movie.rating).toFixed(1)}` : '⭐ N/A';
 
-    // 🟢 Műfajok megjelenítése
+    // Műfajok megjelenítése
     if (movie.genres) {
         movieGenres.textContent = movie.genres;
         movieGenres.style.display = 'inline-block';
@@ -93,7 +90,7 @@ function renderCurrentMovie() {
         movieGenres.style.display = 'none';
     }
 
-    // 🟢 Szöveges adatok kitöltése (A DUPLIKÁLT CÍM/ÉV/RATING SOROKAT KITAKARÍTOTTUK INNEN!)
+    // Szöveges adatok kitöltése (A DUPLIKÁLT CÍM/ÉV/RATING SOROKAT KITAKARÍTOTTUK INNEN!)
     movieOverview.textContent = movie.overview ? movie.overview : 'Ehhez a filmhez még nincs elérhető leírás a TMDB-n.';
     moviePath.textContent = formatPath(movie.path);
     moviePath.parentElement.setAttribute('title', movie.path || '');
@@ -107,13 +104,13 @@ function renderCurrentMovie() {
         // Betöltjük a képet
         posterImg.src = fullPosterUrl;
 
-        // 🟢 HA A KÉP SIKERESEN BETÖLTŐDÖTT:
+        // HA A KÉP SIKERESEN BETÖLTŐDÖTT:
         posterImg.onload = () => {
             posterImg.classList.remove('hidden');
             posterPlaceholder.style.display = 'none';
         };
 
-        // 🟢 HA A KÉP BETÖLTÉSE SIKERTELEN (pl. AdBlocker vagy nincs net):
+        // HA A KÉP BETÖLTÉSE SIKERTELEN (pl. AdBlocker vagy nincs net):
         posterImg.onerror = () => {
             console.warn(`⚠️ Nem sikerült betölteni a képet: ${fullPosterUrl}`);
             posterImg.classList.add('hidden');
@@ -220,4 +217,105 @@ document.addEventListener('DOMContentLoaded', () => {
             nextMovie();
         }
     });
+});
+
+// ==========================================================================
+// KÍVÁNSÁGLISTA ELEMEK ÉS LOGIKA
+// ==========================================================================
+const wishlistToggleBtn = document.getElementById("wishlist-toggle-btn");
+const wishlistModal = document.getElementById("wishlist-modal");
+const closeWishlistBtn = document.getElementById("close-wishlist-btn");
+const wishlistForm = document.getElementById("wishlist-form");
+const wishlistInput = document.getElementById("wishlist-input");
+const wishlistList = document.getElementById("wishlist-list");
+
+async function fetchWishlist() {
+  try {
+    const res = await fetch("/api/wishlist");
+    const items = await res.json();
+    renderWishlist(items);
+  } catch (e) {
+    console.error("Kívánságlista betöltési hiba:", e);
+  }
+}
+
+// Lista kirajzolása
+function renderWishlist(items) {
+  wishlistList.innerHTML = "";
+  if (items.length === 0) {
+    wishlistList.innerHTML =
+      '<li style="color: var(--text-muted); text-align: center; padding: 10px;">Még nincs kért film a listában.</li>';
+    return;
+  }
+
+  items.forEach((item) => {
+    const li = document.createElement("li");
+    li.className = "wishlist-item";
+    li.innerHTML = `
+            <span>${item.title}</span>
+            <button class="delete-item-btn" data-id="${item.id}" title="Törlés">🗑️</button>
+        `;
+    wishlistList.appendChild(li);
+  });
+
+  // Törlés gombok eseményei
+  wishlistList.querySelectorAll(".delete-item-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.target.getAttribute("data-id");
+      await deleteWishlistItem(id);
+    });
+  });
+}
+
+// Új film hozzáadása
+async function addWishlistItem(title) {
+  try {
+    const res = await fetch("/api/wishlist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title }),
+    });
+    if (res.ok) {
+      wishlistInput.value = "";
+      fetchWishlist();
+    }
+  } catch (e) {
+    console.error("Hiba a hozzáadáskor:", e);
+  }
+}
+
+// Film törlése
+async function deleteWishlistItem(id) {
+  try {
+    const res = await fetch(`/api/wishlist?id=${id}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      fetchWishlist();
+    }
+  } catch (e) {
+    console.error("Hiba a törléskor:", e);
+  }
+}
+
+// Felugró ablak megnyitása / bezárása
+wishlistToggleBtn.addEventListener("click", () => {
+  wishlistModal.classList.remove("hidden");
+  fetchWishlist();
+});
+
+closeWishlistBtn.addEventListener("click", () => {
+  wishlistModal.classList.add("hidden");
+});
+
+wishlistModal.addEventListener("click", (e) => {
+  if (e.target === wishlistModal) {
+    wishlistModal.classList.add("hidden");
+  }
+});
+
+wishlistForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const title = wishlistInput.value.trim();
+  if (title) addWishlistItem(title);
 });

@@ -18,7 +18,7 @@ services:
     image: adminer
     container_name: family_movie_adminer
     ports:
-      - "8080:8080"
+      - "8082:8080"
 
   web:
     build: .
@@ -31,13 +31,7 @@ services:
     depends_on:
       - db
     volumes:
-      - smb_media:/mnt/sda1
+      - /mnt/sda1:/mnt/sda1
 
 volumes:
   pgdata:
-  smb_media:
-    driver: local
-    driver_opts:
-      type: "cifs"
-      o: "username=sambauser,password=systemadmin,vers=3.0,ro"
-      device: "//192.168.2.3/Vinyo"

@@ -47,7 +47,8 @@ class MovieBackendHandler(http.server.SimpleHTTPRequestHandler):
                 cursor = conn.cursor(cursor_factory=RealDictCursor) #Python dictionarry
                 cursor.execute('''
                     SELECT DISTINCT ON (COALESCE(tmdb_title, clean_title)) 
-                    id, clean_title, tmdb_title, original_title, genres, year, poster_path, overview, rating::FLOAT, path 
+                    id, clean_title, tmdb_title, original_title, is_series, genres, year, poster_path, overview, rating::FLOAT, path, 
+                    COUNT(*) OVER (PARTITION BY tmdb_title) AS series_count
                     FROM movies 
                     ORDER BY COALESCE(tmdb_title, clean_title) ASC, id ASC;
                 ''') 

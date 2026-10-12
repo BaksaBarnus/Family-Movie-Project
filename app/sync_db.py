@@ -251,12 +251,13 @@ def sync_smb_to_postgres():
 
         # Upsert
         pg_cursor.execute("""
-            INSERT INTO movies (minidlna_id, clean_title, tmdb_title, original_title, genres, year, raw_filename, path, poster_path, overview, rating)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO movies (minidlna_id, clean_title, tmdb_title, original_title, is_series, genres, year, raw_filename, path, poster_path, overview, rating)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (minidlna_id) DO UPDATE SET
                 clean_title = EXCLUDED.clean_title,
                 tmdb_title = COALESCE(EXCLUDED.tmdb_title, movies.tmdb_title),
                 original_title = COALESCE(EXCLUDED.original_title, movies.original_title),
+                is_series = EXCLUDED.is_series,
                 genres = COALESCE(EXCLUDED.genres, movies.genres),
                 year = EXCLUDED.year,
                 raw_filename = EXCLUDED.raw_filename,
@@ -269,6 +270,7 @@ def sync_smb_to_postgres():
             clean_title,
             tmdb_info.get("tmdb_title"),
             tmdb_info.get("original_title"),
+            is_tv_show,
             tmdb_info.get("genres"),
             year, 
             raw_filename, 

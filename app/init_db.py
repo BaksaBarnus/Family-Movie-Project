@@ -22,6 +22,7 @@ def init_postgres_db():
             clean_title VARCHAR(255) NOT NULL,
             tmdb_title VARCHAR(255),
             original_title VARCHAR(255),
+            is_series BOOLEAN DEFAULT FALSE,
             genres VARCHAR(255),
             year INTEGER,
             raw_filename TEXT,
